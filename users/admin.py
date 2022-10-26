@@ -34,4 +34,4 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('username', 'password1', 'password2'),
         }),
     )
-    search_fields = ('first_name', 'last_name')
+    search_fields = ('first_name', 'last_name', 'username')
