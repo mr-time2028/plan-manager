@@ -40,23 +40,26 @@ class LoginApiView(APIView):
             username = serializer.data['username']
             password = serializer.data['password']
 
-            user = get_user_model().objects.filter(username=username).first()
-            if user and user.check_password(password):
-                if user.is_active:
-                    refresh_token = RefreshToken.for_user(user)
-                    access_token = refresh_token.access_token
+            try:
+                user = get_user_model().objects.get(username=username)
+                if not user.check_password(password):
+                    raise Exception()
+            except Exception:
+                return Response({"detail": "Incorrect username or password."}, status=status.HTTP_400_BAD_REQUEST)
 
-                    if request.platform == "app":
-                        refresh_token.set_exp(lifetime=settings.MOBILE_ACCESS_TOKEN_LIFETIME)
-                        access_token.set_exp(lifetime=settings.MOBILE_REFRESH_TOKEN_LIFETIME)
+            if user.is_active:
+                refresh_token = RefreshToken.for_user(user)
+                access_token = refresh_token.access_token
 
-                    tokens = {"username": username, "refresh": str(refresh_token), "access": str(access_token)}
-                    user.last_login = timezone.now()
-                    user.save()
+                if request.platform == "app":
+                    refresh_token.set_exp(lifetime=settings.MOBILE_ACCESS_TOKEN_LIFETIME)
+                    access_token.set_exp(lifetime=settings.MOBILE_REFRESH_TOKEN_LIFETIME)
 
-                    return Response(tokens, status=status.HTTP_200_OK)
-                return Response({"detail": "User is not confirmed."}, status=status.HTTP_403_FORBIDDEN)
-            return Response({"detail": "Incorrect username or password."}, status=status.HTTP_400_BAD_REQUEST)
+                tokens = {"username": username, "refresh": str(refresh_token), "access": str(access_token)}
+                user.last_login = timezone.now()
+                user.save()
+                return Response(tokens, status=status.HTTP_200_OK)
+            return Response({"detail": "User is not confirmed."}, status=status.HTTP_403_FORBIDDEN)
         return Response(serializer.errors)
 
 

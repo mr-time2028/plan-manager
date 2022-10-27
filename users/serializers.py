@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 
+from rest_framework import status
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -17,7 +18,7 @@ class RegistrationSerializer(serializers.Serializer):
         password2 = attrs.get('password2', None)
 
         if password1 != password2:
-            raise ValidationError({"detail": "Your passwords didn't match."}, code=400)
+            raise ValidationError({"detail": "Your passwords didn't match."}, code=status.HTTP_400_BAD_REQUEST)
 
         return attrs
 
