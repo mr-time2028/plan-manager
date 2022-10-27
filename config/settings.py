@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -116,11 +118,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -134,3 +136,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # User Settings
 AUTH_USER_MODEL = 'users.User'
+
+
+# Rest Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+
+# Simple JWT settings
+WEB_ACCESS_TOKEN_LIFETIME = timedelta(minutes=5)
+WEB_REFRESH_TOKEN_LIFETIME = timedelta(days=1)
+MOBILE_ACCESS_TOKEN_LIFETIME = timedelta(minutes=5)
+MOBILE_REFRESH_TOKEN_LIFETIME = timedelta(days=90)
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': WEB_ACCESS_TOKEN_LIFETIME,
+    'REFRESH_TOKEN_LIFETIME': WEB_REFRESH_TOKEN_LIFETIME,
+}
