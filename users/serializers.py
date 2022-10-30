@@ -6,10 +6,11 @@ from rest_framework.exceptions import ValidationError
 
 
 PASSWORD_REGEX = RegexValidator(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})')
+USERNAME_REGEX = RegexValidator(r'^[\w][\w\d_]+$')
 
 
 class RegistrationSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=100)
+    username = serializers.CharField(max_length=100, validators=[USERNAME_REGEX])
     password1 = serializers.CharField(max_length=30, validators=[PASSWORD_REGEX])
     password2 = serializers.CharField(max_length=30, validators=[PASSWORD_REGEX])
 
