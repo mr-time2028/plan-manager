@@ -22,7 +22,7 @@ class RegistrationApiView(APIView):
             username = serializer.data['username']
             password1 = serializer.data['password1']
 
-            if get_user_model().objects.filter(username=username).exists():
+            if not get_user_model().objects.filter(username=username).exists():
                 get_user_model().objects.create_user(
                     username=username,
                     password=password1,
