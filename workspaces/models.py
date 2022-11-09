@@ -9,6 +9,8 @@ class Workspace(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.title
 
 
 class WorkspaceUser(models.Model):
@@ -24,13 +26,14 @@ class WorkspaceUser(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
 
 
-
 class Board(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=1024, allow_unicode=True, unique=True)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
     members = models.ManyToManyField(get_user_model(), through='BoardUser')
 
+    def __str__(self):
+        return self.title
 
 
 class BoardUser(models.Model):
@@ -39,11 +42,12 @@ class BoardUser(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
 
 
-
 class Group(models.Model):
     title = models.CharField(max_length=255)
     board = models.ForeignKey(Board, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.title
 
 
 class Task(models.Model):
@@ -65,3 +69,6 @@ class Task(models.Model):
     expire_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
