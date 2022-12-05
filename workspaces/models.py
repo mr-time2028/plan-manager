@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 class Workspace(models.Model):
     members = models.ManyToManyField(get_user_model(), through='WorkspaceUser')
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=1024, allow_unicode=True, unique=True)
+    slug = models.SlugField(max_length=1024, allow_unicode=True, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -22,13 +22,18 @@ class WorkspaceUser(models.Model):
     )
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
     member = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    role = models.CharField(max_length=1, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES, default='m')
     joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['workspace', 'member'], name='unique workspace member')
+        ]
 
 
 class Board(models.Model):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=1024, allow_unicode=True, unique=True)
+    slug = models.SlugField(max_length=1024, allow_unicode=True, unique=True, blank=True)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
     members = models.ManyToManyField(get_user_model(), through='BoardUser')
 
