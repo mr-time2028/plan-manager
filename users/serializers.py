@@ -1,4 +1,5 @@
 from django.core.validators import RegexValidator
+from django.contrib.auth import get_user_model
 
 from rest_framework import status
 from rest_framework import serializers
@@ -7,6 +8,12 @@ from rest_framework.exceptions import ValidationError
 
 PASSWORD_REGEX = RegexValidator(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})')
 USERNAME_REGEX = RegexValidator(r'^[\w][\w\d_]+$')
+
+
+class UserSerialzier(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'username', 'first_name', 'last_name')
 
 
 class RegistrationSerializer(serializers.Serializer):

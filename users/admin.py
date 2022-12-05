@@ -11,6 +11,7 @@ class UserAdmin(BaseUserAdmin):
         'last_login'
     ]
     list_display = (
+        'id',
         'username',
         'first_name',
         'last_name',
