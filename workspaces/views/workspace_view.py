@@ -18,7 +18,7 @@ from ..serializers.workspace_serializer import (
     WorkspaceUserSerialzier,
 )
 from ..permissions import (
-    IsPartOfWorkspace,
+    IsPartOf,
     IsWorkspaceOwner,
     IsSuperuser,
 )
@@ -33,7 +33,7 @@ class WorkspaceView(viewsets.ModelViewSet):
         if self.action in ["create", "update", "destroy", "add_member", "remove_member"]:
             self.permission_classes.append(IsWorkspaceOwner | IsSuperuser)
         if self.action in ["retrieve"]:
-            self.permission_classes.append(IsPartOfWorkspace | IsSuperuser)
+            self.permission_classes.append(IsPartOf | IsSuperuser)
         if self.action == "all_workspaces":
             self.permission_classes.append(IsSuperuser)
 
