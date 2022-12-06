@@ -6,6 +6,7 @@ from django.db.models.signals import (
 )
 
 from .models import (
+    Board,
     Workspace,
     WorkspaceUser,
 )
@@ -25,6 +26,7 @@ def unique_slug_gen(instance, field, new_slug=None):
     return slug
 
 
+@receiver(pre_save, sender=Board)
 @receiver(pre_save, sender=Workspace)
 def slug_generator(sender, instance, *args, **kwargs):
     if not instance.slug:

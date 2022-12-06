@@ -6,9 +6,9 @@ from ..models import Board
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    group_set = GroupSerializer(many=True, required=False)
-    members = UserSerialzier(many=True, required=False)
+    group_set = GroupSerializer(many=True, required=False, read_only=True)
+    members = UserSerialzier(many=True, required=False, read_only=True)
 
     class Meta:
         model = Board
-        fields = "__all__"
+        fields = ("title", "slug", "group_set", "members")
