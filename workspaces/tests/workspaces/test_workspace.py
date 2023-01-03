@@ -2,11 +2,11 @@ import json
 
 from django.urls import reverse
 
-from .base_test import BaseTest
+from .base_test_workspaces import BaseTestWorkspaces
 from ...models import Workspace
 
 
-class WorkspaceTest(BaseTest):
+class WorkspaceTest(BaseTestWorkspaces):
     def test_all_workspaces(self):
         """
         just superuser can access to list of all workspaces
@@ -191,8 +191,11 @@ class WorkspaceTest(BaseTest):
             path=reverse("workspaces:workspaces-remove-member", kwargs={"slug": self.workspace1.slug}),
             HTTP_AUTHORIZATION= f'Bearer {self.user1_access_token}',
             data={
-                "members": [self.user2.username],
+                "members": {
+                    self.user2.username: None,
+                },
             },
+            format="json",
         )
         self.assertEqual(response1.status_code, 200)      # user1 is owner of workspace1, so can remove members of workspace1
 
@@ -200,8 +203,11 @@ class WorkspaceTest(BaseTest):
             path=reverse("workspaces:workspaces-remove-member", kwargs={"slug": self.workspace1.slug}),
             HTTP_AUTHORIZATION= f'Bearer {self.user2_access_token}',
             data={
-                "members": [self.user1.username],
+                "members": {
+                    self.user1.username: None,
+                },
             },
+            format="json",
         )
         self.assertEqual(response2.status_code, 403)      # user2 is a member of workspace1, so cannot remove members of workspace1
 
@@ -209,7 +215,10 @@ class WorkspaceTest(BaseTest):
             path=reverse("workspaces:workspaces-remove-member", kwargs={"slug": self.workspace1.slug}),
             HTTP_AUTHORIZATION= f'Bearer {self.superuser_access_token}',
             data={
-                "members": [self.user2.username],
+                "members": {
+                    self.user2.username: None,
+                },
             },
+            format="json",
         )
         self.assertEqual(response3.status_code, 200)      # superuser can remove members from any workspace
