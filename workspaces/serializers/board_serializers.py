@@ -17,14 +17,14 @@ class BoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ("title", "slug", "group", "members")
+        fields = ("id", "title", "slug", "group", "members")
 
 
 class BoardCreateSerializer(serializers.ModelSerializer):
     group = serializers.SlugRelatedField(
         many=True,
         required=False,
-        slug_field="title",
+        slug_field="pk",
         queryset=Task.objects.all()
     )
     members = serializers.SlugRelatedField(

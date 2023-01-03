@@ -1,12 +1,34 @@
 from rest_framework import serializers
 
-from workspaces.models import Group
+from workspaces.models import (
+    Group,
+    Task,
+    Board,
+)
 from .task_serializer import TaskSerializer
 
 
-class GroupSerializer(serializers.ModelSerializer):
-    task_set = TaskSerializer(many=True, required=False)
+class GroupCreateSerializer(serializers.ModelSerializer):
+    board = serializers.SlugRelatedField(
+        slug_field="slug",
+        queryset=Board.objects.all(),
+    )
 
     class Meta:
         model = Group
-        fields = "__all__"
+        fields = ("title", "board")
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    task = TaskSerializer(many=True, required=False)
+
+    class Meta:
+        model = Group
+        fields = ("id", "title", "board", "task")
+
+
+class GroupUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Group
+        fields = ("title",)

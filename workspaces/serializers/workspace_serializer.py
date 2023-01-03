@@ -14,7 +14,7 @@ class WorkspaceCreateSerializer(serializers.ModelSerializer):
     board = serializers.SlugRelatedField(
         many=True,
         required=False,
-        slug_field="title",
+        slug_field="slug",
         queryset=Board.objects.all()
     )
     members = serializers.SlugRelatedField(
