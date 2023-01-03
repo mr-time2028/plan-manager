@@ -11,7 +11,7 @@ from workspaces.models import (
 
 
 class WorkspaceCreateSerializer(serializers.ModelSerializer):
-    board_set = serializers.SlugRelatedField(
+    board = serializers.SlugRelatedField(
         many=True,
         required=False,
         slug_field="title",
@@ -26,7 +26,7 @@ class WorkspaceCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workspace
-        fields = ("title", "slug", "board_set", "members")
+        fields = ("title", "slug", "board", "members")
 
 
 class WorkspaceUpdateSerializer(serializers.ModelSerializer):
@@ -37,12 +37,23 @@ class WorkspaceUpdateSerializer(serializers.ModelSerializer):
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
-    board_set = BoardSerializer(many=True, required=False, read_only=True)
-    members = UserSerialzier(many=True, required=False, read_only=True)
+    board = BoardSerializer(many=True, required=False, read_only=True)
+    members = serializers.SerializerMethodField("get_members")
+    owners = serializers.SerializerMethodField("get_owners")
 
     class Meta:
         model = Workspace
-        fields = ("id", "title", "slug", "board_set", "members")
+        fields = ("id", "title", "slug", "board", "owners", "members")
+
+    def get_owners(self, obj):
+        owners = obj.members.filter(workspace_user__role='o')
+        serializer = UserSerialzier(owners, many=True)
+        return serializer.data
+
+    def get_members(self, obj):
+        members = obj.members.filter(workspace_user__role='m')
+        serializer = UserSerialzier(members, many=True)
+        return serializer.data
 
 
 class WorkspaceUserSerialzier(serializers.Serializer):
