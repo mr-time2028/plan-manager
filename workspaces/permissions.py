@@ -1,10 +1,12 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import permissions
 
 from .models import (
     Workspace,
     WorkspaceUser,
+    Board,
 )
 
 
@@ -30,6 +32,28 @@ class IsWorkspaceOwner(permissions.BasePermission):
             return workspace_user.role == WorkspaceUser.OWNER
         except Exception:
             return False
+
+
+class IsGroupOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        board_slug = request.data.get("board")
+        try:
+            board = get_object_or_404(Board, slug=board_slug)
+            workspace = board.workspace
+            return Workspace.objects.filter(
+                Q(slug=workspace.slug) & \
+                Q(workspace_user__member=request.user) & \
+                Q(workspace_user__role=WorkspaceUser.OWNER)
+            ).exists()
+        except:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        return Workspace.objects.filter(
+            Q(slug=obj.board.workspace.slug) & \
+            Q(workspace_user__member=request.user) & \
+            Q(workspace_user__role=WorkspaceUser.OWNER)
+        ).exists()
 
 
 class IsBoardOwner(permissions.BasePermission):
