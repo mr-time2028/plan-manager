@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -50,9 +52,10 @@ class GroupView(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data, context={"request": request})
         if serializer.is_valid(raise_exception=True):
             title = serializer.validated_data["title"]
+            board_slug = serializer.validated_data["board"]
 
             # check if the group has a duplicate title
-            if Group.objects.filter(title=title).exists():
+            if Group.objects.filter(Q(title=title) & Q(board__slug=board_slug)).exists():
                 return Response({"detail": "Board already has a group with this title."}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer.save()

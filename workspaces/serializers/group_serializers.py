@@ -2,10 +2,9 @@ from rest_framework import serializers
 
 from workspaces.models import (
     Group,
-    Task,
     Board,
 )
-from .task_serializer import TaskSerializer
+from .task_serializers import TaskSerializer
 
 
 class GroupCreateSerializer(serializers.ModelSerializer):

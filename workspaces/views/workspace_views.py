@@ -12,7 +12,7 @@ from ..models import (
     Workspace,
     WorkspaceUser,
 )
-from ..serializers.workspace_serializer import (
+from ..serializers.workspace_serializers import (
     WorkspaceSerializer,
     WorkspaceCreateSerializer,
     WorkspaceUpdateSerializer,

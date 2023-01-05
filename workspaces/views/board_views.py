@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework import viewsets
@@ -76,6 +77,9 @@ class BoardView(viewsets.ModelViewSet):
             title = serializer.data['title']
             workspace_slug = serializer.data["workspace"]
             board_members = serializer.data.get("members")
+
+            if Board.objects.filter(Q(title=title) & Q(workspace__slug=workspace_slug)).exists():
+                return Response({"detail": "Workspace already has a board with this title."}, status=status.HTTP_400_BAD_REQUEST)
 
             workspace_obj = get_object_or_404(Workspace, slug=workspace_slug)
             board_obj = Board.objects.create(title=title, workspace=workspace_obj)
