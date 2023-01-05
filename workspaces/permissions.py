@@ -7,6 +7,7 @@ from .models import (
     Workspace,
     WorkspaceUser,
     Board,
+    Group,
 )
 
 
@@ -51,6 +52,29 @@ class IsGroupOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return Workspace.objects.filter(
             Q(slug=obj.board.workspace.slug) & \
+            Q(workspace_user__member=request.user) & \
+            Q(workspace_user__role=WorkspaceUser.OWNER)
+        ).exists()
+
+
+class IsTaskOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        group_id = request.data.get("group")
+
+        try:
+            group = get_object_or_404(Group, pk=group_id)
+            workspace = group.board.workspace
+            return Workspace.objects.filter(
+                Q(slug=workspace.slug) & \
+                Q(workspace_user__member=request.user) & \
+                Q(workspace_user__role=WorkspaceUser.OWNER)
+            ).exists()
+        except:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        return Workspace.objects.filter(
+            Q(slug=obj.group.board.workspace.slug) & \
             Q(workspace_user__member=request.user) & \
             Q(workspace_user__role=WorkspaceUser.OWNER)
         ).exists()
