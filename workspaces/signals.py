@@ -1,15 +1,11 @@
 from django.utils.text import slugify
 from django.dispatch import receiver
-from django.db.models import Q
 from django.db.models.signals import (
     pre_save,
-    post_delete,
 )
 
 from .models import (
-    Board,
-    Workspace,
-    WorkspaceUser,
+    Task
 )
 
 
@@ -27,23 +23,7 @@ def unique_slug_gen(instance, field, new_slug=None):
     return slug
 
 
-@receiver(pre_save, sender=Board)
-@receiver(pre_save, sender=Workspace)
+@receiver(pre_save, sender=Task)
 def slug_generator(sender, instance, *args, **kwargs):
     if not instance.slug:
         instance.slug = unique_slug_gen(instance, "title")
-
-
-@receiver(post_delete, sender=WorkspaceUser)
-def change_owner(sender, instance, *args, **kwargs):
-    if instance.role == WorkspaceUser.OWNER and \
-            not WorkspaceUser.objects.filter(
-                Q(workspace__title=instance.workspace.title) & \
-                Q(role=WorkspaceUser.OWNER)
-            ).exists():
-        oldest_member = WorkspaceUser.objects.filter(
-            workspace__title=instance.workspace.title
-        ).order_by("joined_at").first()
-        if oldest_member:
-            oldest_member.role = WorkspaceUser.OWNER
-            oldest_member.save()
