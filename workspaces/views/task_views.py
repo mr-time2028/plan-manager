@@ -1,6 +1,6 @@
-from rest_framework.exceptions import MethodNotAllowed
+from django.shortcuts import render
+
 from rest_framework import viewsets
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -25,8 +25,9 @@ class TaskView(viewsets.ModelViewSet):
             return TaskSerializer
 
     def list(self, request):
-        serializer = self.get_serializer(instance=self.queryset, context={"request": request}, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # serializer = self.get_serializer(instance=self.queryset, context={"request": request}, many=True)
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+        return render(request, "home.html")
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data, context={"request": request})
@@ -40,7 +41,10 @@ class TaskView(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             serializer.save()
-            return Response({"success": "Task created successfully."}, status=status.HTTP_201_CREATED)
+            return Response({
+                "error": False,
+                "data": serializer.data,
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):

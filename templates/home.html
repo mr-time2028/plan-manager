@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row d-flex justify-content-center mt-5">
+    <!-- doing tasks -->
+    <div class="p-4 col-md-3">
+      <div class="card-hover-shadow-2x mb-3 card">
+        <div class="card-header-tab card-header">
+          <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
+            <i class="fa fa-tasks"></i>&nbsp; Working On
+          </div>
+        </div>
+        <div id="tasks" class="scroll-area-sm">
+          <perfect-scrollbar class="ps-show-limits">
+            <div style="position: static;" class="ps ps--active-y">
+              <div class="ps-content">
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item">
+                    <!-- <div class="todo-indicator bg-success"></div> -->
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox11" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox11">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">
+                            Call Sam For payments 
+                            <!-- <div class="badge badge-danger ml-2">Rejected</div> -->
+                          </div>
+                          <!-- <div class="widget-subheading"><i>By Bob</i></div> -->
+                        </div>
+                        <div class="widget-content-right">
+                          <span class="btn btn-info" id="time"></span>
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i>
+                          </button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="todo-indicator bg-focus"></div>
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox12" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox12">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">Make payment to Bluedart</div>
+                          <div class="widget-subheading">
+                            <!-- <div>By Johnny
+                              <div class="badge badge-pill badge-info ml-2">NEW</div>
+                            </div> -->
+                          </div>
+                        </div>
+                        <div class="widget-content-right">
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i></button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </perfect-scrollbar>
+        </div>
+        <div class="text-right card-footer">
+          <button id="openAddWorkingOnTaskModal" class="btn btn-info">Add Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- done tasks -->
+    <div class="p-4 col-md-3">
+      <div class="card-hover-shadow-2x mb-3 card">
+        <div class="card-header-tab card-header">
+          <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
+            <i class="fa fa-check"></i>&nbsp; Done
+          </div>
+        </div>
+        <div id="tasks" class="scroll-area-sm">
+          <perfect-scrollbar class="ps-show-limits">
+            <div style="position: static;" class="ps ps--active-y">
+              <div class="ps-content">
+                <ul class=" list-group list-group-flush">
+                  <li class="list-group-item">
+                    <!-- <div class="todo-indicator bg-warning"></div> -->
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox11" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox11">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">
+                            Call Sam For payments 
+                            <!-- <div class="badge badge-danger ml-2">Rejected</div> -->
+                          </div>
+                          <!-- <div class="widget-subheading"><i>By Bob</i></div> -->
+                        </div>
+                        <div class="widget-content-right">
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i>
+                          </button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="todo-indicator bg-focus"></div>
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox12" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox12">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">Make payment to Bluedart</div>
+                          <div class="widget-subheading">
+                            <!-- <div>By Johnny
+                              <div class="badge badge-pill badge-info ml-2">NEW</div>
+                            </div> -->
+                          </div>
+                        </div>
+                        <div class="widget-content-right">
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i></button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </perfect-scrollbar>
+        </div>
+        <div id="openAddDoneTaskModal" class="text-right card-footer">
+          <button class="btn btn-info">Add Task</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- blocked tasks -->
+    <div class="p-4 col-md-3">
+      <div class="card-hover-shadow-2x mb-3 card">
+        <div class="card-header-tab card-header">
+          <div class="card-header-title font-size-lg text-capitalize font-weight-normal">
+            <i class="fa fa-exclamation-circle"></i>&nbsp; Unfinished
+          </div>
+        </div>
+        <div id="tasks" class="scroll-area-sm">
+          <perfect-scrollbar class="ps-show-limits">
+            <div style="position: static;" class="ps ps--active-y">
+              <div class="ps-content">
+                <ul class=" list-group list-group-flush">
+                  <li class="list-group-item">
+                    <!-- <div class="todo-indicator bg-warning"></div> -->
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox11" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox11">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">
+                            Call Sam For payments 
+                            <!-- <div class="badge badge-danger ml-2">Rejected</div> -->
+                          </div>
+                          <!-- <div class="widget-subheading"><i>By Bob</i></div> -->
+                        </div>
+                        <div class="widget-content-right">
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i>
+                          </button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="todo-indicator bg-focus"></div>
+                    <div class="widget-content p-0">
+                      <div class="widget-content-wrapper">
+                        <!-- <div class="widget-content-left mr-2">
+                          <div class="custom-checkbox custom-control">
+                            <input class="custom-control-input" id="exampleCustomCheckbox12" type="checkbox">
+                            <label class="custom-control-label" for="exampleCustomCheckbox12">&nbsp;</label>
+                          </div>
+                        </div> -->
+                        <div class="widget-content-left">
+                          <div class="widget-heading">Make payment to Bluedart</div>
+                          <div class="widget-subheading">
+                            <!-- <div>By Johnny
+                              <div class="badge badge-pill badge-info ml-2">NEW</div>
+                            </div> -->
+                          </div>
+                        </div>
+                        <div class="widget-content-right">
+                          <button class="border-0 btn-transition btn btn-outline-success">
+                            <i class="fa fa-check"></i></button>
+                          <button class="border-0 btn-transition btn btn-outline-danger">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </perfect-scrollbar>
+        </div>
+        <div id="openAddUnfinishedTaskModal" class="text-right card-footer">
+          <button class="btn btn-info">Add Task</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="modal">
+      <form method="post" id="createTaskForm">
+        <input type="hidden" name="status">
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="taskTitle">Title</label>
+            <!-- <input type="title" name="title" class="form-control" id="taskTitle" aria-describedby="titleHelp" placeholder="Enter Title"> -->
+            <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
+            <input type="title" name="title" class="form-control" id="taskTitle" placeholder="Enter Title">
+          </div>
+
+          <div class="row col-md-6 form-group">
+            <div class="col-md-4">
+              <label for="taskDays">Hour</label>
+              <input type="number" min="0" name="task-duration-days" class="form-control" id="taskDays" placeholder="Enter Days">
+            </div>
+
+            <div class="col-md-4">
+              <label for="taskHours">Hour</label>
+              <input type="number" min="0" name="task-duration-hours" class="form-control" id="taskHours" placeholder="Enter Hours">
+            </div>
+            
+            <div class="col-md-4">
+              <label for="taskMinutes">Minute</label>
+              <input type="number" min="0" name="task-duration-minutes" class="form-control" id="taskMinutes" placeholder="Enter Minutes">
+            </div>
+          </div>
+
+          <div class="col-md-6 form-group">
+            <label for="taskDescription">Description</label>
+            <!-- <input type="title" name="title" class="form-control" id="taskTitle" aria-describedby="titleHelp" placeholder="Enter Title"> -->
+            <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
+            <textarea style="resize: none;" rows="5" cols="40" name="description" class="form-control" id="taskDescription" placeholder="Write Some Description..."></textarea>
+          </div>
+        </div>
+
+        <div class="d-block text-right">
+          <button id="closeModalBtn" class="btn btn-danger">cancel</button>
+          <button id="addTaskBtn" class="btn btn-success">add</button>
+        </div>
+      </form>
+
+      
+  </dialog>
+  <div id="overlay"></div>
+
+{% endblock %}

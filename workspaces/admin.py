@@ -6,4 +6,4 @@ from workspaces.models import (
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ['title', 'status', 'expire_at', 'created_at', 'updated_at']
+    list_display = ['id', 'title', 'status', 'created_at', 'updated_at']

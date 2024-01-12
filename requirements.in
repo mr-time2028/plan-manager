@@ -4,3 +4,4 @@ python-decouple
 psycopg2-binary
 djangorestframework-simplejwt
 django-debug-toolbar
+django-cors-headers
