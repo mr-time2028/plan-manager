@@ -15,7 +15,7 @@ let doneTasksSection
 let unfinishedTasksSection
 let display
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async() => {
     openAddWorkingOnTaskModal = document.getElementById("openAddWorkingOnTaskModal")
     openAddDoneTaskModal = document.getElementById("openAddDoneTaskModal")
     openAddUnfinishedTaskModal = document.getElementById("openAddUnfinishedTaskModal")
@@ -34,7 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
     openAddUnfinishedTaskModal.addEventListener("click", () => openModal('u'))
     closeModalBtn.addEventListener("click", closeModal)
 
-    fetchAndRenderAllTasks();
+    await fetchAndRenderAllTasks();
+
+    document.querySelectorAll(".taskLi").forEach(element => {
+        element.querySelectorAll("button")[1].addEventListener("click", (e) => {
+            const taskID = e.target.parentElement.parentElement.parentElement.parentElement.querySelector("input[type='hidden']").value
+            deleteTaskWithAlert(taskID, "Are you sure you want to delete this task?", "warning")
+        })
+    });
 
     createTaskForm.addEventListener("submit", function(e) {
         e.preventDefault()
@@ -84,47 +91,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     notify("error while add task", "error")
                 } else {
-                    // close createTask model
-                    closeModal()
-
-                    // refresh tasks after create one
-                    workingOnTasksSection.innerHTML = ""
-                    doneTasksSection.innerHTML = ""
-                    unfinishedTasksSection.innerHTML = ""
-                    fetchAndRenderAllTasks();
-
                     // store timer in storage (because when refresh page, all timers reset)
                     let taskStartDate = new Date()
                     let daysDuration = taskStartDate.getDate() + Number(formData.taskDurationDays)
                     let hoursDuration = taskStartDate.getHours() + Number(formData.taskDurationHours)
                     let minutesDuration = taskStartDate.getMinutes() + Number(formData.taskDurationMinutes)
 
-                    daysDuration = daysDuration == "" ? "0" + daysDuration : daysDuration;
+                    daysDuration = daysDuration === "" ? "0" + daysDuration : daysDuration;
                     daysDuration = daysDuration < 10 ? "0" + daysDuration : daysDuration;
 
-                    hoursDuration = hoursDuration == "" ? "0" + hoursDuration : hoursDuration;
+                    hoursDuration = hoursDuration === "" ? "0" + hoursDuration : hoursDuration;
                     hoursDuration = hoursDuration < 10 ? "0" + hoursDuration : hoursDuration;
 
-                    minutesDuration = minutesDuration == "" ? "0" + minutesDuration : minutesDuration;
+
+                    minutesDuration = minutesDuration === "" ? "0" + minutesDuration : minutesDuration;
                     minutesDuration = minutesDuration < 10 ? "0" + minutesDuration : minutesDuration;
 
                     currentMonth = taskStartDate.getMonth() + 1
                     currentMonth = currentMonth < 10 ? "0" + currentMonth : currentMonth
  
-                    let taskEndDate = new Date(`${taskStartDate.getFullYear()}-${currentMonth}-${daysDuration}T${hoursDuration}:${minutesDuration}:${taskStartDate.getSeconds()}`)
-
-                    let timerData = {
-                        "taskStartDate": taskStartDate,
-                        "taskEndDate": taskEndDate,
-                    }
-
-                    localStorage.setItem(`${data.data.id}_timer`, JSON.stringify(timerData, undefined, 4))
+                    let timeString = `${taskStartDate.getFullYear()}-${currentMonth}-${daysDuration}T${hoursDuration}:${minutesDuration}:${taskStartDate.getSeconds()}`
+                    let taskEndDate = new Date(timeString)
+                    localStorage.setItem(`${data.data.id}_timer`, taskEndDate, undefined, 4)
 
                     // start timer
                     const taskTimeEl = document.getElementById(`${data.data.id}_timer`)
-                    startTimer(formData.taskDurationDays, formData.taskDurationHours, formData.taskDurationMinutes, 0, taskTimeEl)
+                    startTimer(formData.taskDurationDays, formData.taskDurationHours, formData.taskDurationMinutes, taskStartDate.getSeconds(), taskTimeEl)
+                    
+                    // close createTask model
+                    closeModal()
 
-                    notify("task was added successfully", "success");
+                    successAndRefreshAlert("task was added successfully!")
                 }
             })
             .catch((error) => {
@@ -137,16 +134,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchAndRenderTasks(status, targetSection) {
     taskTemplate = `
-    <li class="list-group-item">
+    <li class="taskLi list-group-item">
+        <input type="hidden" value="{TASK_ID}"/>
+
         <div class="widget-content p-0">
             <div class="widget-content-wrapper">
             <div class="widget-content-left">
                 <div class="widget-heading">
-                {TITLE_PLACEHOLDER}
+                {TASK_TITLE}
                 </div>
             </div>
             <div class="widget-content-right">
-                <span class="btn btn-info" id="{TIME_ID_PLACEHOLDER}"></span>
+                <span class="btn btn-info" id="{TIME_ID_TIMER}"></span>
                 <button class="border-0 btn-transition btn btn-outline-success">
                 <i class="fa fa-check"></i>
                 </button>
@@ -164,16 +163,17 @@ async function fetchAndRenderTasks(status, targetSection) {
         const tasks = await response.json();
 
         tasks.data.forEach((task) => {
-            targetSection.insertAdjacentHTML("afterbegin", taskTemplate.replace('{TITLE_PLACEHOLDER}', task.title).replace('{TIME_ID_PLACEHOLDER}', `${task.id}_timer`));
+            targetSection.insertAdjacentHTML("afterbegin",
+                taskTemplate
+                .replace('{TASK_TITLE}', task.title)
+                .replace('{TIME_ID_TIMER}', `${task.id}_timer`)
+                .replace('{TASK_ID}', task.id)
+            )
 
             const timerStorage = localStorage.getItem(`${task.id}_timer`)
             if (timerStorage) {
-                timerData = JSON.parse(timerStorage)
-                // console.log(timerData)
-
                 let now = new Date()
-                let taskStartDate = new Date(timerData.taskStartDate)
-                let taskEndDate = new Date(timerData.taskEndDate)
+                let taskEndDate = new Date(timerStorage)
                 let timeRemaining = taskEndDate - now;
 
                 let taskDaysRemained = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
@@ -234,20 +234,63 @@ function notify(msg, msgType) {
     })
 }
 
-function notifyModal(title, icon, html, footer) {
+function successAndRefreshAlert(title) {
     Swal.fire({
-        icon: icon,
         title: title,
-        html: html,
-        footer: footer
-    })
+        showDenyButton: false,
+        showCancelButton: false,
+        confirmButtonText: "OK",
+        denyButtonText: `dsf`
+      }).then((result) => {
+        location.href = location.href;
+      });
 }
 
 
-// document.addEventListener('keydown', function(e) {
-//     if (e.key == 'Escape' && !modal.classList.contains('hidden')) closeModal() 
-// })
+function deleteTaskWithAlert(taskID, title) {
+    Swal.fire({
+        title: title,
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!"
+      }).then((result) => {
+        if (result.isConfirmed) {
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+        
+            const body = {
+                method: "DELETE",
+                headers: headers,
+            }
 
+            fetch(`http:\/\/localhost:8000/api/tasks/${taskID}`, body)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    notify("error while delete task", "error")
+                } else {
+                    // refresh tasks after delete one
+                    workingOnTasksSection.innerHTML = ""
+                    doneTasksSection.innerHTML = ""
+                    unfinishedTasksSection.innerHTML = ""
+                    fetchAndRenderAllTasks();
+        
+                    // delete timer from local storage
+                    localStorage.removeItem(`${taskID}_timer`)
+
+                    location.href = location.href
+                }
+            })
+            .catch((error) => {
+                console.log(error)
+                notify("something went wrong, please try again later", "error")
+            })
+        }
+    });
+}
 
 // timer
 function startTimer(days=0, hours=0, minutes=0, seconds=0, display) {
