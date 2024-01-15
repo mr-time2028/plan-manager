@@ -6,7 +6,7 @@ from .views import (
     task_views,
 )
 
-router = SimpleRouter()
+router = SimpleRouter(trailing_slash=False)
 router.register(r'tasks', task_views.TaskView, basename='tasks')
 
 

@@ -3,12 +3,26 @@ console.clear();
 
 
 // modal section
-let openAddWorkingOnTaskModal, openAddDoneTaskModal, openAddUnfinishedTaskModal, modal, overlay, closeModalBtn, createTaskForm
+let openAddWorkingOnTaskModal
+let openAddDoneTaskModal
+let openAddUnfinishedTaskModal
+let modal
+let overlay
+let closeModalBtn
+let createTaskForm
+let workingOnTasksSection
+let doneTasksSection
+let unfinishedTasksSection
+let display
 
 document.addEventListener("DOMContentLoaded", () => {
     openAddWorkingOnTaskModal = document.getElementById("openAddWorkingOnTaskModal")
     openAddDoneTaskModal = document.getElementById("openAddDoneTaskModal")
     openAddUnfinishedTaskModal = document.getElementById("openAddUnfinishedTaskModal")
+
+    workingOnTasksSection = document.getElementById("workingOnTasksSection")
+    doneTasksSection = document.getElementById("doneTasksSection")
+    unfinishedTasksSection = document.getElementById("unfinishedTasksSection")
 
     createTaskForm = document.getElementById("createTaskForm")
     modal = document.getElementById('modal')
@@ -19,42 +33,35 @@ document.addEventListener("DOMContentLoaded", () => {
     openAddDoneTaskModal.addEventListener("click", () => openModal('d'))
     openAddUnfinishedTaskModal.addEventListener("click", () => openModal('u'))
     closeModalBtn.addEventListener("click", closeModal)
-    
-    // TODO: load tasks
-    async function fetchTasks() {
-        e.preventDefault()
 
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
-
-        const body = {
-            method: "GET",
-            headers: headers,
-        }
-
-        // get workingOn tasks
-        await fetch("http:\/\/localhost:8000/api/tasks/", body)
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.error) {
-                notify("error while add task", "error")
-            } else {
-                closeModal()
-                
-                notify("task was added successfully", "success")
-            }
-        })
-        .catch((error) => {
-            closeModal()
-            notify("something went wrong, please try again later", "error")
-        })
-
-
-    }
+    fetchAndRenderAllTasks();
 
     createTaskForm.addEventListener("submit", function(e) {
         e.preventDefault()
         const formData = extractFormData(createTaskForm)
+
+        const taskTitleEl = document.getElementById("taskTitle")
+        const taskDaysEl = document.getElementById("taskDays")
+        const taskHoursEl = document.getElementById("taskHours")
+        const taskMinutesEl = document.getElementById("taskMinutes")
+
+        if (!formData.title) {
+            taskTitleEl.nextElementSibling.textContent = "title is required!"
+            return
+        } else {
+            taskTitleEl.nextElementSibling.textContent = ""
+        }
+
+        if (!formData.taskDurationDays && !formData.taskDurationHours && !formData.taskDurationMinutes) {
+            taskDaysEl.nextElementSibling.textContent = "one or more of this fields are required"
+            taskHoursEl.nextElementSibling.textContent = "one or more of this fields are required"
+            taskMinutesEl.nextElementSibling.textContent = "one or more of this fields are required"
+            return
+        } else {
+            taskDaysEl.nextElementSibling.textContent = ""
+            taskHoursEl.nextElementSibling.textContent = ""
+            taskMinutesEl.nextElementSibling.textContent = ""
+        }
 
         const payload = {
             title: formData.title,
@@ -71,36 +78,130 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: headers,
         }
 
-        fetch("http:\/\/localhost:8000/api/tasks/", body)
+        fetch("http:\/\/localhost:8000/api/tasks", body)
             .then((response) => response.json())
             .then((data) => {
                 if (data.error) {
                     notify("error while add task", "error")
                 } else {
+                    // close createTask model
                     closeModal()
-                    notify("task was added successfully", "success")
+
+                    // refresh tasks after create one
+                    workingOnTasksSection.innerHTML = ""
+                    doneTasksSection.innerHTML = ""
+                    unfinishedTasksSection.innerHTML = ""
+                    fetchAndRenderAllTasks();
+
+                    // store timer in storage (because when refresh page, all timers reset)
+                    let taskStartDate = new Date()
+                    let daysDuration = taskStartDate.getDate() + Number(formData.taskDurationDays)
+                    let hoursDuration = taskStartDate.getHours() + Number(formData.taskDurationHours)
+                    let minutesDuration = taskStartDate.getMinutes() + Number(formData.taskDurationMinutes)
+
+                    daysDuration = daysDuration == "" ? "0" + daysDuration : daysDuration;
+                    daysDuration = daysDuration < 10 ? "0" + daysDuration : daysDuration;
+
+                    hoursDuration = hoursDuration == "" ? "0" + hoursDuration : hoursDuration;
+                    hoursDuration = hoursDuration < 10 ? "0" + hoursDuration : hoursDuration;
+
+                    minutesDuration = minutesDuration == "" ? "0" + minutesDuration : minutesDuration;
+                    minutesDuration = minutesDuration < 10 ? "0" + minutesDuration : minutesDuration;
+
+                    currentMonth = taskStartDate.getMonth() + 1
+                    currentMonth = currentMonth < 10 ? "0" + currentMonth : currentMonth
+ 
+                    let taskEndDate = new Date(`${taskStartDate.getFullYear()}-${currentMonth}-${daysDuration}T${hoursDuration}:${minutesDuration}:${taskStartDate.getSeconds()}`)
+
+                    let timerData = {
+                        "taskStartDate": taskStartDate,
+                        "taskEndDate": taskEndDate,
+                    }
+
+                    localStorage.setItem(`${data.data.id}_timer`, JSON.stringify(timerData, undefined, 4))
+
+                    // start timer
+                    const taskTimeEl = document.getElementById(`${data.data.id}_timer`)
+                    startTimer(formData.taskDurationDays, formData.taskDurationHours, formData.taskDurationMinutes, 0, taskTimeEl)
+
+                    notify("task was added successfully", "success");
                 }
             })
             .catch((error) => {
                 closeModal()
+                console.log(error)
                 notify("something went wrong, please try again later", "error")
             })
-
-        
-        /*
-
-        [{
-            id: <backend>
-            startDate: now(),
-            duration: form.duration
-        },
-        {
-
-        }]
-
-        */
     })
 })
+
+async function fetchAndRenderTasks(status, targetSection) {
+    taskTemplate = `
+    <li class="list-group-item">
+        <div class="widget-content p-0">
+            <div class="widget-content-wrapper">
+            <div class="widget-content-left">
+                <div class="widget-heading">
+                {TITLE_PLACEHOLDER}
+                </div>
+            </div>
+            <div class="widget-content-right">
+                <span class="btn btn-info" id="{TIME_ID_PLACEHOLDER}"></span>
+                <button class="border-0 btn-transition btn btn-outline-success">
+                <i class="fa fa-check"></i>
+                </button>
+                <button class="border-0 btn-transition btn btn-outline-danger">
+                <i class="fa fa-trash"></i>
+                </button>
+            </div>
+            </div>
+        </div>
+    </li>
+    `
+
+    try {
+        const response = await fetch(`http:\/\/localhost:8000/api/tasks?status=${status}`);
+        const tasks = await response.json();
+
+        tasks.data.forEach((task) => {
+            targetSection.insertAdjacentHTML("afterbegin", taskTemplate.replace('{TITLE_PLACEHOLDER}', task.title).replace('{TIME_ID_PLACEHOLDER}', `${task.id}_timer`));
+
+            const timerStorage = localStorage.getItem(`${task.id}_timer`)
+            if (timerStorage) {
+                timerData = JSON.parse(timerStorage)
+                // console.log(timerData)
+
+                let now = new Date()
+                let taskStartDate = new Date(timerData.taskStartDate)
+                let taskEndDate = new Date(timerData.taskEndDate)
+                let timeRemaining = taskEndDate - now;
+
+                let taskDaysRemained = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                let taskHoursRemained = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let taskMinutesRemained = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                let taskSecondsRemained = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                
+
+                timerSection = document.getElementById(`${task.id}_timer`)
+                startTimer(taskDaysRemained, taskHoursRemained, taskMinutesRemained, taskSecondsRemained, timerSection)
+            } else {
+                console.log("cannot get nothing from storage")
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        notify(`Error while getting ${status} tasks`, "error");
+    }
+}
+
+async function fetchAndRenderAllTasks() {
+    await Promise.all([
+        fetchAndRenderTasks('w', workingOnTasksSection),
+        fetchAndRenderTasks('d', doneTasksSection),
+        fetchAndRenderTasks('u', unfinishedTasksSection),
+    ]);
+}
 
 const extractFormData = function(formElement) {
     return [...formElement.querySelectorAll('input'), ...formElement.querySelectorAll('textarea')]
@@ -116,6 +217,9 @@ const openModal = function (status) {
     modal.showModal()
     modal.classList.add('block')
     createTaskForm.querySelector("input[type=hidden]").value = status
+    createTaskForm.querySelectorAll("small.text-danger").forEach((t) => {
+        t.innerHTML = ""
+    })
 }
 
 const closeModal = function () {
@@ -173,6 +277,3 @@ function performActionAfterTimer() {
     // Perform your desired action here
     console.log("Timer has stopped. Performing action...");
 }
-
-var display = document.getElementById('time');
-startTimer(2, 5, 6, 0, display);

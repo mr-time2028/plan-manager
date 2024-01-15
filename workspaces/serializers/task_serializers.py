@@ -9,7 +9,7 @@ from workspaces.models import Task
 class TaskCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ("id", "title", "status", "description")
+        fields = ("title", "status", "description")
 
 
 class TaskSerializer(serializers.ModelSerializer):
