@@ -37,10 +37,53 @@ document.addEventListener("DOMContentLoaded", async() => {
     await fetchAndRenderAllTasks();
 
     document.querySelectorAll(".taskLi").forEach(element => {
-        element.querySelectorAll("button")[1].addEventListener("click", (e) => {
-            const taskID = e.target.parentElement.parentElement.parentElement.parentElement.querySelector("input[type='hidden']").value
-            deleteTaskWithAlert(taskID, "Are you sure you want to delete this task?", "warning")
-        })
+        const updateStatusBtn = element.querySelector(".btn-outline-success");
+
+        if (updateStatusBtn) {
+            updateStatusBtn.addEventListener("click", (e) => {
+                const taskID = e.target.closest(".taskLi").querySelector("input[type='hidden']").value;
+                
+                const payload = {
+                    status: 'd'
+                }
+
+                const headers = new Headers();
+                headers.append("Content-Type", "application/json");
+            
+                const body = {
+                    method: "PUT",
+                    body: JSON.stringify(payload),
+                    headers: headers,
+                }
+    
+                fetch(`http:\/\/localhost:8000/api/tasks/${taskID}`, body)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error) {
+                        notify("error while update task", "error")
+                    } else {
+                        // delete timer from local storage
+                        localStorage.removeItem(`${taskID}_timer`)    
+                        location.href = location.href
+                    }
+                })
+                .catch((error) => {
+                    console.log(error)
+                    notify("something went wrong, please try again later", "error")
+                })
+            })
+        }
+    })
+
+    document.querySelectorAll(".taskLi").forEach(element => {
+        const deleteBtn = element.querySelector(".btn-outline-danger");
+
+        if (deleteBtn) {
+            deleteBtn.addEventListener("click", (e) => {
+                const taskID = e.target.closest(".taskLi").querySelector("input[type='hidden']").value;
+                deleteTaskWithAlert(taskID, "Are you sure you want to delete this task?", "warning");
+            });
+        }
     });
 
     createTaskForm.addEventListener("submit", function(e) {
@@ -91,33 +134,34 @@ document.addEventListener("DOMContentLoaded", async() => {
                 if (data.error) {
                     notify("error while add task", "error")
                 } else {
-                    // store timer in storage (because when refresh page, all timers reset)
-                    let taskStartDate = new Date()
-                    let daysDuration = taskStartDate.getDate() + Number(formData.taskDurationDays)
-                    let hoursDuration = taskStartDate.getHours() + Number(formData.taskDurationHours)
-                    let minutesDuration = taskStartDate.getMinutes() + Number(formData.taskDurationMinutes)
+                    if (data.data.status === 'w') {
+                        // store timer in storage (because when refresh page, all timers reset)
+                        let taskStartDate = new Date()
+                        let daysDuration = taskStartDate.getDate() + Number(formData.taskDurationDays)
+                        let hoursDuration = taskStartDate.getHours() + Number(formData.taskDurationHours)
+                        let minutesDuration = taskStartDate.getMinutes() + Number(formData.taskDurationMinutes)
 
-                    daysDuration = daysDuration === "" ? "0" + daysDuration : daysDuration;
-                    daysDuration = daysDuration < 10 ? "0" + daysDuration : daysDuration;
+                        daysDuration = daysDuration === "" ? "0" + daysDuration : daysDuration;
+                        daysDuration = daysDuration < 10 ? "0" + daysDuration : daysDuration;
 
-                    hoursDuration = hoursDuration === "" ? "0" + hoursDuration : hoursDuration;
-                    hoursDuration = hoursDuration < 10 ? "0" + hoursDuration : hoursDuration;
+                        hoursDuration = hoursDuration === "" ? "0" + hoursDuration : hoursDuration;
+                        hoursDuration = hoursDuration < 10 ? "0" + hoursDuration : hoursDuration;
 
+                        minutesDuration = minutesDuration === "" ? "0" + minutesDuration : minutesDuration;
+                        minutesDuration = minutesDuration < 10 ? "0" + minutesDuration : minutesDuration;
 
-                    minutesDuration = minutesDuration === "" ? "0" + minutesDuration : minutesDuration;
-                    minutesDuration = minutesDuration < 10 ? "0" + minutesDuration : minutesDuration;
+                        currentMonth = taskStartDate.getMonth() + 1
+                        currentMonth = currentMonth < 10 ? "0" + currentMonth : currentMonth
 
-                    currentMonth = taskStartDate.getMonth() + 1
-                    currentMonth = currentMonth < 10 ? "0" + currentMonth : currentMonth
- 
-                    let timeString = `${taskStartDate.getFullYear()}-${currentMonth}-${daysDuration}T${hoursDuration}:${minutesDuration}:${taskStartDate.getSeconds()}`
-                    let taskEndDate = new Date(timeString)
-                    localStorage.setItem(`${data.data.id}_timer`, taskEndDate, undefined, 4)
+                        let timeString = `${taskStartDate.getFullYear()}-${currentMonth}-${daysDuration}T${hoursDuration}:${minutesDuration}:${taskStartDate.getSeconds()}`
+                        let taskEndDate = new Date(timeString)
+                        localStorage.setItem(`${data.data.id}_timer`, taskEndDate, undefined, 4)
 
-                    // start timer
-                    const taskTimeEl = document.getElementById(`${data.data.id}_timer`)
-                    startTimer(formData.taskDurationDays, formData.taskDurationHours, formData.taskDurationMinutes, taskStartDate.getSeconds(), taskTimeEl)
-                    
+                        // start timer
+                        const taskTimeEl = document.getElementById(`${data.data.id}_timer`)
+                        startTimer(formData.taskDurationDays, formData.taskDurationHours, formData.taskDurationMinutes, taskStartDate.getSeconds(), taskTimeEl)
+                    }
+
                     // close createTask model
                     closeModal()
 
@@ -133,7 +177,17 @@ document.addEventListener("DOMContentLoaded", async() => {
 })
 
 async function fetchAndRenderTasks(status, targetSection) {
-    taskTemplate = `
+    let checkBtnTemplate = `
+    <button class="border-0 btn-transition btn btn-outline-success">
+        <i class="fa fa-check"></i>
+    </button>
+    `
+
+    let timerTemplate = `
+    <span class="btn btn-info" id="{TIME_ID_TIMER}"></span>
+    `
+
+    let taskTemplate = `
     <li class="taskLi list-group-item">
         <input type="hidden" value="{TASK_ID}"/>
 
@@ -145,12 +199,10 @@ async function fetchAndRenderTasks(status, targetSection) {
                 </div>
             </div>
             <div class="widget-content-right">
-                <span class="btn btn-info" id="{TIME_ID_TIMER}"></span>
-                <button class="border-0 btn-transition btn btn-outline-success">
-                <i class="fa fa-check"></i>
-                </button>
+                ${status == 'w' ? timerTemplate: ''}
+                ${status == 'w' ? checkBtnTemplate : ''}
                 <button class="border-0 btn-transition btn btn-outline-danger">
-                <i class="fa fa-trash"></i>
+                    <i class="fa fa-trash"></i>
                 </button>
             </div>
             </div>
@@ -190,7 +242,7 @@ async function fetchAndRenderTasks(status, targetSection) {
         });
 
     } catch (error) {
-        console.error(error);
+        console.log(error);
         notify(`Error while getting ${status} tasks`, "error");
     }
 }
@@ -271,13 +323,7 @@ function deleteTaskWithAlert(taskID, title) {
             .then((data) => {
                 if (data.error) {
                     notify("error while delete task", "error")
-                } else {
-                    // refresh tasks after delete one
-                    workingOnTasksSection.innerHTML = ""
-                    doneTasksSection.innerHTML = ""
-                    unfinishedTasksSection.innerHTML = ""
-                    fetchAndRenderAllTasks();
-        
+                } else {      
                     // delete timer from local storage
                     localStorage.removeItem(`${taskID}_timer`)
 
