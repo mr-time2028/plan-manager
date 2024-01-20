@@ -5,6 +5,7 @@ from django.db.models import (
     Q,
     QuerySet,
 )
+from django.core.mail import EmailMessage
 
 
 def custom_filter(request: HttpRequest, queryset: QuerySet, filter_fields: List):
@@ -20,3 +21,16 @@ def custom_filter(request: HttpRequest, queryset: QuerySet, filter_fields: List)
                 q_objects &= Q(**{field: value})
         return queryset.filter(q_objects)
     return queryset
+
+
+def send_email(task_instance):
+    subject = 'created task'
+    message = f"Task with title '{task_instance.title}' successfully created."
+    to_email = 'hamidrezam350000@gmail.com'
+
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        to=[to_email]
+    )
+    email.send()
