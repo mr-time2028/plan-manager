@@ -11,7 +11,7 @@ from ..serializers.task_serializers import (
     TaskCreateSerializer,
     TaskUpdateSerializer,
 )
-from ..utils import custom_filter
+from ..utils import custom_filter, send_email
 
 
 class TaskView(viewsets.ModelViewSet):
@@ -47,6 +47,9 @@ class TaskView(viewsets.ModelViewSet):
         if create_serializer.is_valid(raise_exception=True):
             # we can handle title uniqu later...
             task_instance = create_serializer.save()
+
+            send_email(task_instance)
+
             list_serializer = TaskSerializer(instance=task_instance, context={"request": request})    
             return Response({
                 "error": False,
