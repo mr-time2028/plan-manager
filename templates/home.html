@@ -73,7 +73,7 @@
     </div>
   </div>
 
-  <dialog id="modal">
+  <dialog id="createTaskModal">
       <form method="post" id="createTaskForm">
         <input type="hidden" name="status">
         <div class="row">
@@ -81,7 +81,7 @@
             <label for="taskTitle">Title</label>
             <!-- <input type="title" name="title" class="form-control" id="taskTitle" aria-describedby="titleHelp" placeholder="Enter Title"> -->
             <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
-            <input type="title" name="title" class="form-control" id="taskTitle" placeholder="Enter Title">
+            <input type="title" name="title" class="form-control" id="createTaskTitle" placeholder="Enter Title">
             <small class="text-danger"></small>
           </div>
 
@@ -109,18 +109,43 @@
             <label for="taskDescription">Description</label>
             <!-- <input type="title" name="title" class="form-control" id="taskTitle" aria-describedby="titleHelp" placeholder="Enter Title"> -->
             <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
-            <textarea style="resize: none;" rows="5" cols="40" name="description" class="form-control" id="taskDescription" placeholder="Write Some Description..."></textarea>
+            <textarea style="resize: none;" rows="5" cols="40" name="description" class="form-control" id="createTaskDescription" placeholder="Write Some Description..."></textarea>
             <small class="text-danger"></small>
           </div>
         </div>
 
         <div class="d-block text-right">
-          <button type="button" id="closeModalBtn" class="btn btn-danger">cancel</button>
+          <button type="button" id="closeCreateTaskModalBtn" class="btn btn-danger">cancel</button>
           <button id="addTaskBtn" class="btn btn-success">add</button>
         </div>
       </form>
+  </dialog>
 
-      
+  <dialog id="updateTaskModal">
+    <form method="put" id="updateTaskForm">
+      <input type="hidden" name="status">
+      <input type="hidden" name="taskID">
+      <div class="row">
+        <div class="col-md-6 form-group">
+          <label for="taskTitle">Title</label>
+          <input type="title" name="title" class="form-control" id="updateTaskTitle" placeholder="Enter Title">
+          <small class="text-danger"></small>
+        </div>
+
+        <div class="col-md-6 form-group">
+          <label for="taskDescription">Description</label>
+          <!-- <input type="title" name="title" class="form-control" id="taskTitle" aria-describedby="titleHelp" placeholder="Enter Title"> -->
+          <!-- <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small> -->
+          <textarea style="resize: none;" rows="5" cols="40" name="description" class="form-control" id="updateTaskDescription" placeholder="Write Some Description..."></textarea>
+          <small class="text-danger"></small>
+        </div>
+      </div>
+
+      <div class="d-block text-right">
+        <button type="button" id="closeUpdateTaskModalBtn" class="btn btn-danger">cancel</button>
+        <button id="updateTaskBtn" class="btn btn-success">update</button>
+      </div>
+    </form>
   </dialog>
   <div id="overlay"></div>
 

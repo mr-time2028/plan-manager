@@ -6,10 +6,13 @@ console.clear();
 let openAddWorkingOnTaskModal
 let openAddDoneTaskModal
 let openAddUnfinishedTaskModal
-let modal
+let createTaskModal
+let updateTaskModal
 let overlay
-let closeModalBtn
+let closeCreateTaskModalBtn
+let closeUpdateTaskModalBtn
 let createTaskForm
+let updateTaskForm
 let workingOnTasksSection
 let doneTasksSection
 let unfinishedTasksSection
@@ -25,22 +28,80 @@ document.addEventListener("DOMContentLoaded", async() => {
     unfinishedTasksSection = document.getElementById("unfinishedTasksSection")
 
     createTaskForm = document.getElementById("createTaskForm")
-    modal = document.getElementById('modal')
+    updateTaskForm = document.getElementById("updateTaskForm")
+    createTaskModal = document.getElementById('createTaskModal')
+    updateTaskModal = document.getElementById('updateTaskModal')
     overlay = document.getElementById('overlay')
-    closeModalBtn = document.getElementById('closeModalBtn')
+    closeCreateTaskModalBtn = document.getElementById('closeCreateTaskModalBtn')
+    closeUpdateTaskModalBtn = document.getElementById('closeUpdateTaskModalBtn')
 
-    openAddWorkingOnTaskModal.addEventListener("click", () => openModal('w'))
-    openAddDoneTaskModal.addEventListener("click", () => openModal('d'))
-    openAddUnfinishedTaskModal.addEventListener("click", () => openModal('u'))
-    closeModalBtn.addEventListener("click", closeModal)
+    openAddWorkingOnTaskModal.addEventListener("click", () => openModal(createTaskModal, 'create', createTaskForm, 'w'))
+    openAddDoneTaskModal.addEventListener("click", () => openModal(createTaskModal, 'create', createTaskForm, 'd'))
+    openAddUnfinishedTaskModal.addEventListener("click", () => openModal(createTaskModal, 'create', createTaskForm, 'u'))
+    closeCreateTaskModalBtn.addEventListener("click", () => closeModal(createTaskModal))
+    closeUpdateTaskModalBtn.addEventListener("click", () => closeModal(updateTaskModal))
 
     await fetchAndRenderAllTasks();
 
+    // update task
+    document.querySelectorAll(".taskLi").forEach(element => {
+        element.addEventListener("click", (e) => {
+            e.preventDefault()
+
+            openModal(updateTaskModal, '', updateTaskForm, "")
+            const taskID = e.target.closest(".taskLi").querySelectorAll("input[type='hidden']")[0].value;
+            const taskDescription = e.target.closest(".taskLi").querySelectorAll("input[type='hidden']")[1].value;
+            const taskTitle = e.target.closest(".taskLi").querySelector(".widget-heading").textContent.trim()
+
+            updateTaskForm.elements["updateTaskTitle"].value = taskTitle
+            updateTaskForm.elements["updateTaskDescription"].value = taskDescription
+            updateTaskForm.elements["taskID"].value = taskID
+        })
+    })
+
+    updateTaskForm.addEventListener("submit", function(e) {
+        e.preventDefault()
+        const taskID = e.target.querySelectorAll("input[type='hidden']")[1].value;
+        console.log(taskID)
+
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+
+        const formData = extractFormData(updateTaskForm)
+
+        const payload = {
+            title: formData.title,
+            description: formData.description,
+        }
+    
+        const body = {
+            method: "PUT",
+            body: JSON.stringify(payload),
+            headers: headers,
+        }
+
+        fetch(`http:\/\/localhost:8000/api/tasks/${taskID}`, body)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.error) {
+                notify("error while update task", "error")
+            } else {
+                location.href = location.href
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+            notify("something went wrong, please try again later", "error")
+        })
+    })
+
+    // change status to "done"
     document.querySelectorAll(".taskLi").forEach(element => {
         const updateStatusBtn = element.querySelector(".btn-outline-success");
 
         if (updateStatusBtn) {
             updateStatusBtn.addEventListener("click", (e) => {
+                e.stopPropagation()
                 const taskID = e.target.closest(".taskLi").querySelector("input[type='hidden']").value;
                 
                 const payload = {
@@ -75,22 +136,25 @@ document.addEventListener("DOMContentLoaded", async() => {
         }
     })
 
+    // delete task
     document.querySelectorAll(".taskLi").forEach(element => {
         const deleteBtn = element.querySelector(".btn-outline-danger");
 
         if (deleteBtn) {
             deleteBtn.addEventListener("click", (e) => {
+                e.stopPropagation()
                 const taskID = e.target.closest(".taskLi").querySelector("input[type='hidden']").value;
                 deleteTaskWithAlert(taskID, "Are you sure you want to delete this task?", "warning");
             });
         }
     });
 
+    // create task
     createTaskForm.addEventListener("submit", function(e) {
         e.preventDefault()
         const formData = extractFormData(createTaskForm)
 
-        const taskTitleEl = document.getElementById("taskTitle")
+        const taskTitleEl = document.getElementById("createTaskTitle")
         const taskDaysEl = document.getElementById("taskDays")
         const taskHoursEl = document.getElementById("taskHours")
         const taskMinutesEl = document.getElementById("taskMinutes")
@@ -163,19 +227,20 @@ document.addEventListener("DOMContentLoaded", async() => {
                     }
 
                     // close createTask model
-                    closeModal()
+                    closeModal(createTaskModal)
 
                     successAndRefreshAlert("task was added successfully!")
                 }
             })
             .catch((error) => {
-                closeModal()
+                closeModal(createTaskModal)
                 console.log(error)
                 notify("something went wrong, please try again later", "error")
             })
     })
 })
 
+// fetch task in paralell way
 async function fetchAndRenderTasks(status, targetSection) {
     let checkBtnTemplate = `
     <button class="border-0 btn-transition btn btn-outline-success">
@@ -190,28 +255,35 @@ async function fetchAndRenderTasks(status, targetSection) {
     let taskTemplate = `
     <li class="taskLi list-group-item">
         <input type="hidden" value="{TASK_ID}"/>
+        <input type="hidden" value="{TASK_DESCRIPTION}"/>
 
         <div class="widget-content p-0">
             <div class="widget-content-wrapper">
-            <div class="widget-content-left">
-                <div class="widget-heading">
-                {TASK_TITLE}
+                <div class="widget-content-left">
+                    <div class="widget-heading">
+                    {TASK_TITLE}
+                    </div>
                 </div>
-            </div>
-            <div class="widget-content-right">
-                ${status == 'w' ? timerTemplate: ''}
-                ${status == 'w' ? checkBtnTemplate : ''}
-                <button class="border-0 btn-transition btn btn-outline-danger">
-                    <i class="fa fa-trash"></i>
-                </button>
-            </div>
+                <div class="widget-content-right">
+                    ${status == 'w' ? timerTemplate: ''}
+                    ${status == 'w' ? checkBtnTemplate : ''}
+                    <button class="border-0 btn-transition btn btn-outline-danger">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </li>
     `
 
     try {
-        const response = await fetch(`http:\/\/localhost:8000/api/tasks?status=${status}`);
+        let response
+
+        if (status) {
+            response = await fetch(`http:\/\/localhost:8000/api/tasks?status=${status}`);
+        } else {
+            response = await fetch(`http:\/\/localhost:8000/api/tasks`);
+        }
         const tasks = await response.json();
 
         tasks.data.forEach((task) => {
@@ -220,6 +292,7 @@ async function fetchAndRenderTasks(status, targetSection) {
                 .replace('{TASK_TITLE}', task.title)
                 .replace('{TIME_ID_TIMER}', `${task.id}_timer`)
                 .replace('{TASK_ID}', task.id)
+                .replace('{TASK_DESCRIPTION}', task.description)
             )
 
             const timerStorage = localStorage.getItem(`${task.id}_timer`)
@@ -255,28 +328,92 @@ async function fetchAndRenderAllTasks() {
     ]);
 }
 
+// timer
+function startTimer(days=0, hours=0, minutes=0, seconds=0, display) {
+    var timer = (days*24*60*60) + (hours*60*60) + (minutes*60) + seconds
+    var intervalId = setInterval(function () {
+        var daysFormatted = Math.floor(timer / (24 * 60 * 60));
+        var hoursFormatted = Math.floor((timer % (24 * 60 * 60)) / (60 * 60));
+        var minutesFormatted = Math.floor((timer % (60 * 60)) / 60);
+        var secondsFormatted = Math.floor(timer % 60);
+
+        daysDisplay = daysFormatted < 10 ? "0" + daysFormatted : daysFormatted;
+        hoursDisplay = hoursFormatted < 10 ? "0" + hoursFormatted : hoursFormatted;
+        minutesDisplay = minutesFormatted < 10 ? "0" + minutesFormatted : minutesFormatted;
+        secondsDisplay = secondsFormatted < 10 ? "0" + secondsFormatted : secondsFormatted;
+
+        display.textContent = daysDisplay + ":" + hoursDisplay + ":" + minutesDisplay + ":" + secondsDisplay;
+
+        if (--timer < 0) {
+            clearInterval(intervalId);
+            display.textContent = "Timer Stopped";
+            performActionAfterTimer(display);
+        }
+    }, 1000);
+}
+
+// change task status to "unfinished"
+function performActionAfterTimer(display) {
+    const taskID = display.closest(".taskLi").querySelector("input[type='hidden']").value;
+    console.log(taskID)
+
+    const payload = {
+        status: 'u'
+    }
+
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    const body = {
+        method: "PUT",
+        body: JSON.stringify(payload),
+        headers: headers,
+    }
+
+    fetch(`http:\/\/localhost:8000/api/tasks/${taskID}`, body)
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.error) {
+            notify("error while update task", "error")
+        } else {
+            // delete timer from local storage
+            localStorage.removeItem(`${taskID}_timer`)    
+            location.href = location.href
+        }
+    })
+    .catch((error) => {
+        console.log(error)
+        notify("something went wrong, please try again later", "error")
+    })
+}
+
+// utils
 const extractFormData = function(formElement) {
     return [...formElement.querySelectorAll('input'), ...formElement.querySelectorAll('textarea')]
     .map(input => ({[input.name]: input.value}))
     .reduce((prev, curr) => ({...prev, ...curr}), {})
 }
 
-const openModal = function (status) {
-    [...createTaskForm.querySelectorAll('input'), ...createTaskForm.querySelectorAll('textarea')].forEach(input => {
-        input.value = ""
-    })
+const openModal = function (modalEl, action, form, status) {
+    if (action === 'create') {
+        [...form.querySelectorAll('input'), ...form.querySelectorAll('textarea')].forEach(input => {
+            input.value = ""
+        })
+    }
 
-    modal.showModal()
-    modal.classList.add('block')
-    createTaskForm.querySelector("input[type=hidden]").value = status
-    createTaskForm.querySelectorAll("small.text-danger").forEach((t) => {
+    modalEl.showModal()
+    modalEl.classList.add('block')
+    if (status) {
+        form.querySelector("input[type=hidden]").value = status
+    }
+    form.querySelectorAll("small.text-danger").forEach((t) => {
         t.innerHTML = ""
     })
 }
 
-const closeModal = function () {
-    modal.classList.remove('block')
-    modal.close()
+const closeModal = function (modalEl) {
+    modalEl.classList.remove('block')
+    modalEl.close()
 }
 
 function notify(msg, msgType) {
@@ -326,7 +463,6 @@ function deleteTaskWithAlert(taskID, title) {
                 } else {      
                     // delete timer from local storage
                     localStorage.removeItem(`${taskID}_timer`)
-
                     location.href = location.href
                 }
             })
@@ -336,33 +472,4 @@ function deleteTaskWithAlert(taskID, title) {
             })
         }
     });
-}
-
-// timer
-function startTimer(days=0, hours=0, minutes=0, seconds=0, display) {
-    var timer = (days*24*60*60) + (hours*60*60) + (minutes*60) + seconds
-    var intervalId = setInterval(function () {
-        var daysFormatted = Math.floor(timer / (24 * 60 * 60));
-        var hoursFormatted = Math.floor((timer % (24 * 60 * 60)) / (60 * 60));
-        var minutesFormatted = Math.floor((timer % (60 * 60)) / 60);
-        var secondsFormatted = Math.floor(timer % 60);
-
-        daysDisplay = daysFormatted < 10 ? "0" + daysFormatted : daysFormatted;
-        hoursDisplay = hoursFormatted < 10 ? "0" + hoursFormatted : hoursFormatted;
-        minutesDisplay = minutesFormatted < 10 ? "0" + minutesFormatted : minutesFormatted;
-        secondsDisplay = secondsFormatted < 10 ? "0" + secondsFormatted : secondsFormatted;
-
-        display.textContent = daysDisplay + ":" + hoursDisplay + ":" + minutesDisplay + ":" + secondsDisplay;
-
-        if (--timer < 0) {
-            clearInterval(intervalId);
-            display.textContent = "Timer Stopped";
-            performActionAfterTimer();
-        }
-    }, 1000);
-}
-
-function performActionAfterTimer() {
-    // Perform your desired action here
-    console.log("Timer has stopped. Performing action...");
 }

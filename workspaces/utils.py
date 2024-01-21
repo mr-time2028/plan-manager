@@ -9,10 +9,13 @@ from django.core.mail import EmailMessage
 
 
 def custom_filter(request: HttpRequest, queryset: QuerySet, filter_fields: List):
+    # Check if any filter parameters (including empty values) are provided
+    if not any(request.query_params.get(field) is not None for field in filter_fields):
+        return queryset
+
     filter_params = {}
     for field in filter_fields:
         filter_params[field] = request.query_params.get(field, None)
-
     if filter_params:
         q_objects = Q()
         for field in filter_fields:
